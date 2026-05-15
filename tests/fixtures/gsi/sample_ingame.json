@@ -1,0 +1,44 @@
+{
+  "provider": {"name": "Dota 2", "appid": 570, "version": 47, "timestamp": 1715817600},
+  "map": {
+    "name": "start", "matchid": "7654321", "game_time": 600,
+    "clock_time": 540, "daytime": true, "nightstalker_night": false,
+    "game_state": "DOTA_GAMERULES_STATE_GAME_IN_PROGRESS",
+    "win_team": "none", "customgamename": "", "ward_purchase_cooldown": 0
+  },
+  "player": {
+    "steamid": "76561198000000000", "name": "tester", "activity": "playing",
+    "kills": 3, "deaths": 1, "assists": 5, "last_hits": 80, "denies": 12,
+    "kill_streak": 0, "team_name": "radiant", "gold": 1500, "gold_reliable": 200,
+    "gold_unreliable": 1300, "gold_from_hero_kills": 600, "gold_from_creep_kills": 1200,
+    "gpm": 520, "xpm": 600
+  },
+  "hero": {
+    "id": 14, "name": "npc_dota_hero_pudge", "level": 9, "alive": true,
+    "respawn_seconds": 0, "buyback_cost": 800, "buyback_cooldown": 0,
+    "health": 1200, "max_health": 1500, "mana": 200, "max_mana": 400,
+    "silenced": false, "stunned": false, "disarmed": false, "magicimmune": false,
+    "hexed": false, "muted": false, "break": false, "smoked": false,
+    "has_debuff": false, "talent_1": false, "talent_2": false,
+    "talent_3": false, "talent_4": false, "talent_5": false,
+    "talent_6": false, "talent_7": false, "talent_8": false,
+    "xpos": 100, "ypos": 200
+  },
+  "abilities": {
+    "ability0": {"name":"pudge_meat_hook","level":3,"can_cast":true,"passive":false,"ability_active":true,"cooldown":0,"ultimate":false},
+    "ability1": {"name":"pudge_rot","level":2,"can_cast":true,"passive":false,"ability_active":true,"cooldown":0,"ultimate":false},
+    "ability2": {"name":"pudge_flesh_heap","level":1,"can_cast":false,"passive":true,"ability_active":true,"cooldown":0,"ultimate":false},
+    "ability3": {"name":"pudge_dismember","level":1,"can_cast":true,"passive":false,"ability_active":true,"cooldown":0,"ultimate":true}
+  },
+  "items": {
+    "slot0": {"name":"item_boots","purchaser":0,"can_cast":false,"cooldown":0,"passive":true},
+    "slot1": {"name":"empty"},
+    "slot2": {"name":"empty"},
+    "slot3": {"name":"empty"},
+    "slot4": {"name":"empty"},
+    "slot5": {"name":"empty"},
+    "stash0": {"name":"empty"},
+    "teleport0": {"name":"empty"},
+    "neutral0": {"name":"empty"}
+  }
+}

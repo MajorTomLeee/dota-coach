@@ -21,6 +21,7 @@ def run(config: str):
     from dotacoach.realtime.hotkey import HotkeyListener
     from dotacoach.realtime.runner import RealtimeRunner
     from dotacoach.realtime.voice_backends import make_backend
+    from dotacoach.scheduler import build_scheduler
     from dotacoach.tasks.tracker import TaskTracker
 
     settings = load_settings(Path(config))
@@ -33,6 +34,13 @@ def run(config: str):
         bus, Path("config/rules.yaml"), backend,
         current_tasks=tracker.get_current_tasks(),
     )
+
+    async def weekly_in_bg():
+        try:
+            out = await _run_weekly(settings)
+            click.echo(f"[scheduler] weekly report written: {out}")
+        except Exception as e:
+            click.echo(f"[scheduler] weekly failed: {e}")
 
     async def boot():
         await runner.start()
@@ -49,6 +57,9 @@ def run(config: str):
         thread = threading.Thread(
             target=serve, args=(bus, settings.gsi_port), daemon=True)
         thread.start()
+        # 周自动调度
+        sched = build_scheduler(weekly_in_bg)
+        sched.start()
         # 阻塞
         while True:
             await asyncio.sleep(3600)

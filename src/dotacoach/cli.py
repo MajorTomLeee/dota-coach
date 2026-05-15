@@ -5,9 +5,47 @@ def main():
     """Dota Coach CLI."""
 
 @main.command()
-def run():
+@click.option("--config", default="config/settings.yaml", type=click.Path())
+def run(config: str):
     """Start the realtime layer (常驻进程)。"""
-    click.echo("[stub] realtime not yet implemented")
+    import asyncio
+    import threading
+    from pathlib import Path
+
+    from dotacoach.config import load_settings
+    from dotacoach.consolelog.tailer import LogTailer
+    from dotacoach.events import EventBus
+    from dotacoach.gsi.server import serve
+    from dotacoach.paths import find_console_log, find_dota_root
+    from dotacoach.realtime.hotkey import HotkeyListener
+    from dotacoach.realtime.runner import RealtimeRunner
+    from dotacoach.realtime.voice_backends import make_backend
+
+    settings = load_settings(Path(config))
+    bus = EventBus()
+    backend = make_backend(settings.voice_engine, voice=settings.voice_name)
+    runner = RealtimeRunner(bus, Path("config/rules.yaml"), backend)
+
+    async def boot():
+        await runner.start()
+        # console log tailer
+        dota_root = (Path(settings.dota_path) if settings.dota_path
+                     else find_dota_root())
+        if dota_root:
+            tailer = LogTailer(find_console_log(dota_root), bus)
+            asyncio.create_task(tailer.run())
+        # mute hotkey
+        hk = HotkeyListener(settings.mute_hotkey, runner.toggle_mute)
+        hk.start()
+        # GSI server in background thread
+        thread = threading.Thread(
+            target=serve, args=(bus, settings.gsi_port), daemon=True)
+        thread.start()
+        # 阻塞
+        while True:
+            await asyncio.sleep(3600)
+
+    asyncio.run(boot())
 
 @main.command()
 @click.option("--since-days", default=7, type=int)

@@ -55,11 +55,70 @@ def run(config: str):
 
     asyncio.run(boot())
 
+async def _run_weekly(settings, since_days: int = 7) -> "Path":
+    """周复盘 pipeline 的核心实现，被 weekly 命令和调度器复用。
+
+    返回写入的 markdown 报告文件路径。
+    """
+    import time
+    from datetime import datetime
+    from pathlib import Path
+
+    from anthropic import AsyncAnthropic
+
+    from dotacoach.analysis.pipeline import run_weekly_pipeline
+    from dotacoach.collector.job import CollectJob
+    from dotacoach.collector.opendota import OpenDotaClient
+    from dotacoach.db.dao import Database
+    from dotacoach.notify.feishu import send_feishu_text
+
+    db = Database(Path("data/coach.db"))
+    db.init_schema()
+    client = OpenDotaClient()
+    await CollectJob(client, db).collect_for_account(
+        settings.steam_id_32,
+        since_ts=int(time.time()) - since_days * 86400,
+    )
+    await client.close()
+    anthropic = AsyncAnthropic(api_key=settings.anthropic_api_key)
+    week_label = datetime.now().strftime("%Y-W%V")
+    md, _ = await run_weekly_pipeline(
+        db=db,
+        account_id=settings.steam_id_32,
+        week_label=week_label,
+        anthropic_client=anthropic,
+        model="claude-opus-4-7",
+        since_ts=int(time.time()) - since_days * 86400,
+    )
+    out = Path("data/reports") / f"{week_label}.md"
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(md)
+    if settings.feishu_webhook_url:
+        await send_feishu_text(
+            settings.feishu_webhook_url,
+            f"Dota Coach 周报告 {week_label}",
+            md[:1500] + ("…" if len(md) > 1500 else ""),
+        )
+    return out
+
+
 @main.command()
+@click.option("--config", default="config/settings.yaml", type=click.Path())
 @click.option("--since-days", default=7, type=int)
-def weekly(since_days: int):
-    """Trigger the weekly review pipeline."""
-    click.echo(f"[stub] weekly with since_days={since_days}")
+def weekly(config: str, since_days: int):
+    """Run the weekly review pipeline now."""
+    import asyncio
+    from pathlib import Path
+
+    from dotacoach.config import load_settings
+
+    settings = load_settings(Path(config))
+
+    async def go():
+        out = await _run_weekly(settings, since_days=since_days)
+        click.echo(f"Report written: {out}")
+
+    asyncio.run(go())
 
 @main.command("install-gsi")
 @click.option("--config", default="config/settings.yaml", type=click.Path())

@@ -12,7 +12,7 @@ from typing import Optional
 import pystray
 from pystray import MenuItem as Item, Menu
 
-from .icon import make_tray_icon
+from dotacoach.gui.icon import make_tray_icon
 
 log = logging.getLogger(__name__)
 
@@ -26,13 +26,13 @@ def _settings_path() -> Path:
 
 
 def _spawn_setup() -> None:
-    from . import setup_window
+    from dotacoach.gui import setup_window
     p = mp.Process(target=setup_window.main, daemon=False)
     p.start()
 
 
 def _spawn_viewer() -> None:
-    from . import report_window
+    from dotacoach.gui import report_window
     p = mp.Process(target=report_window.main, daemon=False)
     p.start()
 

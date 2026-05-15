@@ -6,3 +6,7 @@ data/coach.db
 data/reports/
 config/settings.yaml
 .DS_Store
+dist/
+build/
+*.dmg
+*.exe

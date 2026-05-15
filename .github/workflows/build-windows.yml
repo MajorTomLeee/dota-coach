@@ -1,0 +1,66 @@
+name: Build Windows Executable
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "src/**"
+      - "config/**"
+      - "packaging/**"
+      - "pyproject.toml"
+      - ".github/workflows/build-windows.yml"
+  workflow_dispatch: {}
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install uv
+        run: |
+          irm https://astral.sh/uv/install.ps1 | iex
+          echo "$HOME\.local\bin" >> $env:GITHUB_PATH
+
+      - name: Install dependencies
+        run: |
+          uv venv
+          uv pip install -e ".[dev]"
+          uv pip install pyinstaller
+
+      - name: Build .exe
+        run: |
+          uv run pyinstaller packaging/dotacoach-win.spec --noconfirm
+
+      - name: Package as zip
+        run: |
+          cd dist
+          Compress-Archive -Path DotaCoach -DestinationPath DotaCoach-Windows.zip
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: DotaCoach-Windows
+          path: dist/DotaCoach-Windows.zip
+          retention-days: 30
+
+      - name: Deploy to Bowie server
+        if: github.event_name == 'push'
+        env:
+          DEPLOY_KEY: ${{ secrets.BOWIE_DEPLOY_KEY }}
+        shell: bash
+        run: |
+          if [ -z "$DEPLOY_KEY" ]; then
+            echo "BOWIE_DEPLOY_KEY secret not set, skipping deploy"
+            exit 0
+          fi
+          mkdir -p ~/.ssh
+          echo "$DEPLOY_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H 115.190.175.140 >> ~/.ssh/known_hosts
+          scp -i ~/.ssh/id_ed25519 dist/DotaCoach-Windows.zip \
+              root@115.190.175.140:/opt/apps/dota-coach-site/DotaCoach-Windows.zip

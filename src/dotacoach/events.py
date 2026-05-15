@@ -1,5 +1,6 @@
 import asyncio
 import inspect
+import time
 from dataclasses import dataclass, field
 from typing import Any, Callable, Awaitable, Union
 
@@ -9,7 +10,7 @@ Handler = Union[Callable[["Event"], None], Callable[["Event"], Awaitable[None]]]
 class Event:
     type: str
     payload: dict[str, Any] = field(default_factory=dict)
-    ts: float = field(default_factory=lambda: asyncio.get_event_loop().time())
+    ts: float = field(default_factory=time.monotonic)
 
 class EventBus:
     def __init__(self):

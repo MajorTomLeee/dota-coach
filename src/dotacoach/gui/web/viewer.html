@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>Dota Coach 周报告</title>
+<style>
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif;
+    background: #0f172a; color: #e2e8f0;
+  }
+  .header {
+    position: sticky; top: 0; padding: 16px 32px;
+    background: rgba(15,23,42,0.92); backdrop-filter: blur(8px);
+    border-bottom: 1px solid #1e293b; display: flex; gap: 16px; align-items: center;
+  }
+  select {
+    padding: 6px 12px; background: #1e293b; border: 1px solid #334155;
+    color: #e2e8f0; border-radius: 6px; font-size: 13px;
+  }
+  button {
+    padding: 6px 14px; border: none; border-radius: 6px; cursor: pointer;
+    background: linear-gradient(135deg, #ef4444, #f97316); color: white;
+    font-size: 12px; font-weight: 600;
+  }
+  .content { padding: 24px 40px 60px; max-width: 820px; margin: 0 auto; }
+  h1 { color: #f97316; border-bottom: 1px solid #334155; padding-bottom: 8px; }
+  h2 { color: #fb923c; margin-top: 32px; }
+  h3 { color: #fdba74; }
+  code { background: #1e293b; padding: 2px 6px; border-radius: 4px; color: #f97316; font-family: ui-monospace, monospace; font-size: 0.9em; }
+  pre { background: #0a1019; padding: 16px; border-radius: 8px; overflow-x: auto; }
+  ul, ol { line-height: 1.8; }
+  li { margin: 4px 0; }
+  blockquote { border-left: 3px solid #f97316; padding-left: 16px; color: #94a3b8; }
+  .empty { text-align: center; padding: 80px 20px; color: #64748b; }
+  .empty button { margin-top: 16px; }
+</style>
+</head>
+<body>
+  <div class="header">
+    <span style="font-weight:700; color:#f97316;">📊 周报告</span>
+    <select id="weekSel" onchange="loadWeek()"></select>
+    <button onclick="genNow()">立即生成本周报告</button>
+    <span id="status" style="color:#94a3b8; font-size:12px; margin-left:auto;"></span>
+  </div>
+  <div id="content" class="content">
+    <div class="empty">读取报告中...</div>
+  </div>
+<script>
+async function init() {
+  try {
+    const weeks = await pywebview.api.list_reports();
+    const sel = document.getElementById('weekSel');
+    sel.innerHTML = '';
+    if (weeks.length === 0) {
+      document.getElementById('content').innerHTML = `
+        <div class="empty">
+          <p>还没有周报告</p>
+          <button onclick="genNow()">立即生成本周报告</button>
+        </div>`;
+      return;
+    }
+    weeks.forEach(w => {
+      const opt = document.createElement('option');
+      opt.value = w; opt.textContent = w;
+      sel.appendChild(opt);
+    });
+    loadWeek();
+  } catch (e) {
+    document.getElementById('content').innerHTML = `<div class="empty">加载失败：${e}</div>`;
+  }
+}
+async function loadWeek() {
+  const week = document.getElementById('weekSel').value;
+  if (!week) return;
+  const html = await pywebview.api.render_report(week);
+  document.getElementById('content').innerHTML = html;
+}
+async function genNow() {
+  const status = document.getElementById('status');
+  status.textContent = '生成中（拉数据 + 调 Claude，约 30 秒）...';
+  try {
+    const r = await pywebview.api.generate_now();
+    if (r.ok) {
+      status.textContent = '完成：' + r.week_label;
+      await init();
+    } else {
+      status.textContent = '失败：' + r.error;
+    }
+  } catch (e) {
+    status.textContent = '失败：' + e;
+  }
+}
+window.addEventListener('pywebviewready', init);
+</script>
+</body>
+</html>

@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>Dota Coach 设置</title>
+<style>
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0; height: 100%;
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: linear-gradient(135deg, #0f172a, #1e293b);
+    color: #e2e8f0;
+  }
+  body { padding: 32px 40px; }
+  h1 { font-size: 24px; margin: 0 0 4px; background: linear-gradient(135deg, #ef4444, #f97316); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+  p.sub { color: #94a3b8; margin: 0 0 24px; font-size: 13px; }
+  .field { margin-bottom: 18px; }
+  label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: #f1f5f9; }
+  .help { font-size: 11px; color: #64748b; margin-top: 4px; }
+  .help a { color: #f97316; text-decoration: none; }
+  input {
+    width: 100%; padding: 10px 12px;
+    background: #0f172a; border: 1px solid #334155; border-radius: 6px;
+    color: #f1f5f9; font-size: 13px; font-family: ui-monospace, "SF Mono", Consolas, monospace;
+  }
+  input:focus { outline: none; border-color: #f97316; }
+  .row { display: flex; gap: 12px; align-items: center; margin-top: 24px; }
+  button {
+    padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer;
+    font-size: 13px; font-weight: 600;
+  }
+  .primary { background: linear-gradient(135deg, #ef4444, #f97316); color: white; }
+  .secondary { background: #334155; color: #e2e8f0; }
+  .status { flex: 1; font-size: 12px; color: #94a3b8; }
+  .status.ok { color: #22c55e; }
+  .status.err { color: #ef4444; }
+  .post-save {
+    display: none; margin-top: 24px; padding: 16px;
+    background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.4);
+    border-radius: 8px;
+  }
+  .post-save h3 { margin: 0 0 8px; color: #22c55e; font-size: 14px; }
+  .post-save ol { margin: 0; padding-left: 20px; font-size: 12px; line-height: 1.7; }
+  .post-save code {
+    background: #0f172a; padding: 2px 6px; border-radius: 4px;
+    color: #f97316; font-family: ui-monospace, monospace; font-size: 11px;
+  }
+  .copy-btn {
+    margin-left: 8px; padding: 2px 8px; font-size: 10px;
+    background: #334155; color: #e2e8f0; border: none; border-radius: 4px; cursor: pointer;
+  }
+</style>
+</head>
+<body>
+  <h1>Dota Coach</h1>
+  <p class="sub">填两个东西就可以用了。第三个可选。</p>
+
+  <div class="field">
+    <label>Steam 32 位 ID</label>
+    <input id="steam_id" type="text" placeholder="如 12345678" value="">
+    <div class="help">去 <a href="javascript:void(0)" onclick="pywebview.api.open_url('https://www.opendota.com')">opendota.com</a> 搜你的名字，URL 里 /players/&lt;数字&gt; 那串</div>
+  </div>
+
+  <div class="field">
+    <label>Anthropic API Key</label>
+    <input id="anthropic_key" type="password" placeholder="sk-ant-...">
+    <div class="help">去 <a href="javascript:void(0)" onclick="pywebview.api.open_url('https://console.anthropic.com')">console.anthropic.com</a> 创建，月成本 &lt; $1</div>
+  </div>
+
+  <div class="field">
+    <label>飞书 Webhook URL（可选，不填就只本地存报告）</label>
+    <input id="feishu" type="text" placeholder="https://open.feishu.cn/open-apis/bot/v2/hook/...">
+  </div>
+
+  <div class="row">
+    <button class="primary" onclick="save()">保存并继续</button>
+    <button class="secondary" onclick="pywebview.api.cancel()">取消</button>
+    <span id="status" class="status"></span>
+  </div>
+
+  <div id="post-save" class="post-save">
+    <h3>✅ 保存成功！还差最后一步（Steam 没开 API，必须手动）</h3>
+    <ol>
+      <li>打开 Steam 库 → Dota 2 → 右键 → 属性 → 启动选项</li>
+      <li>填入：<code id="launch-opt">-gamestateintegration -condebug</code><button class="copy-btn" onclick="copyLaunch()">复制</button></li>
+      <li>关 Steam 再开（让启动选项生效）</li>
+      <li>关闭这个窗口；右上角托盘图标会变橙色就 OK 了</li>
+    </ol>
+  </div>
+
+<script>
+async function save() {
+  const status = document.getElementById('status');
+  const sid = document.getElementById('steam_id').value.trim();
+  const key = document.getElementById('anthropic_key').value.trim();
+  const fei = document.getElementById('feishu').value.trim();
+  if (!sid || !key) {
+    status.textContent = "Steam ID 和 Anthropic API Key 必填";
+    status.className = "status err";
+    return;
+  }
+  status.textContent = "保存中...";
+  status.className = "status";
+  try {
+    const r = await pywebview.api.save_settings({
+      steam_id_32: sid, anthropic_api_key: key, feishu_webhook_url: fei
+    });
+    if (r.ok) {
+      status.textContent = "已保存到 " + r.path;
+      status.className = "status ok";
+      document.getElementById('post-save').style.display = 'block';
+    } else {
+      status.textContent = "失败：" + r.error;
+      status.className = "status err";
+    }
+  } catch (e) {
+    status.textContent = "失败：" + e;
+    status.className = "status err";
+  }
+}
+function copyLaunch() {
+  navigator.clipboard.writeText(document.getElementById('launch-opt').textContent);
+  event.target.textContent = '已复制';
+  setTimeout(() => event.target.textContent = '复制', 1500);
+}
+// 加载已存在的设置回填
+window.addEventListener('pywebviewready', async () => {
+  try {
+    const cur = await pywebview.api.load_current();
+    if (cur) {
+      if (cur.steam_id_32) document.getElementById('steam_id').value = cur.steam_id_32;
+      if (cur.anthropic_api_key) document.getElementById('anthropic_key').value = cur.anthropic_api_key;
+      if (cur.feishu_webhook_url) document.getElementById('feishu').value = cur.feishu_webhook_url;
+    }
+  } catch (e) { /* no current settings */ }
+});
+</script>
+</body>
+</html>

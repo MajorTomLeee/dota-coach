@@ -4,6 +4,13 @@ import click
 def main():
     """Dota Coach CLI."""
 
+
+@main.command()
+def app():
+    """启动 GUI 模式（系统托盘 + 设置窗口）。"""
+    from dotacoach.gui.tray import main as tray_main
+    tray_main()
+
 @main.command()
 @click.option("--config", default="config/settings.yaml", type=click.Path())
 def run(config: str):

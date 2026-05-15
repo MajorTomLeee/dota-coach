@@ -46,12 +46,24 @@
       实时层在游戏中给你中文语音决策提醒（GSI + Console log，全部 Valve 官方接口）；
       复盘层每周用 Claude 自动挖掘"赢局 vs 输局"的盲区，生成 3 条训练任务。
     </p>
-    <div class="mt-10 flex flex-wrap gap-3">
+    <div class="mt-10">
+      <p class="text-slate-400 text-sm mb-2">一键安装 · Windows PowerShell：</p>
+      <div class="bg-slate-900/80 border border-slate-700 rounded-lg p-4 font-mono text-sm flex items-center gap-3">
+        <span class="text-orange-300 select-none">PS&gt;</span>
+        <code class="text-slate-100 flex-1 overflow-x-auto">irm https://dota.bowie.top/install.ps1 | iex</code>
+      </div>
+      <p class="text-slate-400 text-sm mt-4 mb-2">macOS 终端：</p>
+      <div class="bg-slate-900/80 border border-slate-700 rounded-lg p-4 font-mono text-sm flex items-center gap-3">
+        <span class="text-orange-300 select-none">$</span>
+        <code class="text-slate-100 flex-1 overflow-x-auto">curl -fsSL https://dota.bowie.top/install.sh | bash</code>
+      </div>
+    </div>
+    <div class="mt-6 flex flex-wrap gap-3">
       <a href="#install-windows" class="px-6 py-3 bg-gradient-to-r from-red-500 to-orange-500 text-white font-semibold rounded-lg hover:opacity-90 transition">
-        Windows 安装
+        Windows 详细
       </a>
       <a href="#install-mac" class="px-6 py-3 bg-slate-800 text-slate-200 font-semibold rounded-lg hover:bg-slate-700 transition">
-        macOS 安装
+        macOS 详细
       </a>
       <a href="https://github.com/MajorTomLeee/dota-coach" target="_blank"
          class="px-6 py-3 bg-slate-800 text-slate-200 font-semibold rounded-lg hover:bg-slate-700 transition">
@@ -100,7 +112,7 @@
 <section id="install-windows" class="max-w-5xl mx-auto px-6 py-16">
   <div class="flex items-center gap-3 mb-10">
     <span class="text-3xl">🪟</span>
-    <h2 class="text-3xl font-bold">Windows 安装</h2>
+    <h2 class="text-3xl font-bold">Windows 一键安装</h2>
   </div>
 
   <div class="space-y-8">
@@ -109,11 +121,14 @@
     <div class="flex gap-4">
       <span class="step-num">1</span>
       <div class="flex-1">
-        <h3 class="text-xl font-semibold mb-3">装 Python 3.11+ 和 uv</h3>
-        <p class="text-slate-400 mb-3">PowerShell 里跑：</p>
-        <pre><code class="hljs language-powershell">winget install Python.Python.3.12
-winget install --id=astral-sh.uv -e</code></pre>
-        <p class="text-slate-500 text-sm mt-2">没装 winget？去微软商店搜 "App Installer"。</p>
+        <h3 class="text-xl font-semibold mb-3">PowerShell 跑这一行</h3>
+        <pre><code class="hljs language-powershell">irm https://dota.bowie.top/install.ps1 | iex</code></pre>
+        <p class="text-slate-400 text-sm mt-3">脚本会自动：装 Python+uv → clone 仓库 → 装依赖 → 交互式问你 Steam ID 和 Anthropic API key → 部署 GSI 配置。</p>
+        <p class="text-slate-500 text-xs mt-2">需要的两个东西可以提前准备好：</p>
+        <ul class="text-slate-500 text-xs ml-4 mt-1 space-y-1">
+          <li>• <strong>Steam 32-bit ID</strong>：去 <a href="https://www.opendota.com" class="text-orange-400 hover:underline" target="_blank">opendota.com</a> 搜你的名字，URL 里 <code>/players/12345</code> 那串</li>
+          <li>• <strong>Anthropic API key</strong>：<a href="https://console.anthropic.com" class="text-orange-400 hover:underline" target="_blank">console.anthropic.com</a> 创建</li>
+        </ul>
       </div>
     </div>
 
@@ -121,12 +136,10 @@ winget install --id=astral-sh.uv -e</code></pre>
     <div class="flex gap-4">
       <span class="step-num">2</span>
       <div class="flex-1">
-        <h3 class="text-xl font-semibold mb-3">克隆项目并装依赖</h3>
-        <pre><code class="hljs language-powershell">cd $HOME
-git clone https://github.com/MajorTomLeee/dota-coach.git
-cd dota-coach
-uv venv
-uv pip install -e ".[dev]"</code></pre>
+        <h3 class="text-xl font-semibold mb-3">改 Dota 启动选项（手动唯一一步）</h3>
+        <p class="text-slate-400 mb-3">Steam → 库 → Dota 2 → 右键 → <strong>属性</strong> → <strong>启动选项</strong>，填：</p>
+        <pre><code class="hljs language-text">-gamestateintegration -condebug</code></pre>
+        <p class="text-slate-500 text-xs mt-2">为啥要手动？Valve 没开 API 让外部程序改这个，硬改 Steam 配置文件容易翻车。</p>
       </div>
     </div>
 
@@ -134,45 +147,10 @@ uv pip install -e ".[dev]"</code></pre>
     <div class="flex gap-4">
       <span class="step-num">3</span>
       <div class="flex-1">
-        <h3 class="text-xl font-semibold mb-3">填配置文件</h3>
-        <pre><code class="hljs language-powershell">copy config\settings.example.yaml config\settings.yaml
-notepad config\settings.yaml</code></pre>
-        <p class="text-slate-400 mt-3 mb-2">填入下面 3 个字段：</p>
-        <ul class="text-slate-400 text-sm space-y-1 ml-4">
-          <li>• <code class="text-orange-300">steam_id_32</code>：去 <a href="https://www.opendota.com" class="text-orange-400 hover:underline" target="_blank">opendota.com</a> 搜你的名字，URL 里 <code>/players/12345</code> 那串就是</li>
-          <li>• <code class="text-orange-300">anthropic_api_key</code>：去 <a href="https://console.anthropic.com" class="text-orange-400 hover:underline" target="_blank">console.anthropic.com</a> 拿一个</li>
-          <li>• <code class="text-orange-300">feishu_webhook_url</code>：飞书群里加自定义机器人，复制 webhook URL（可选）</li>
-        </ul>
-      </div>
-    </div>
-
-    <!-- Step 4 -->
-    <div class="flex gap-4">
-      <span class="step-num">4</span>
-      <div class="flex-1">
-        <h3 class="text-xl font-semibold mb-3">改 Dota 启动选项</h3>
-        <p class="text-slate-400 mb-3">Steam → 库 → Dota 2 → 右键 → <strong>属性</strong> → <strong>启动选项</strong>，填入：</p>
-        <pre><code class="hljs language-text">-gamestateintegration -condebug</code></pre>
-      </div>
-    </div>
-
-    <!-- Step 5 -->
-    <div class="flex gap-4">
-      <span class="step-num">5</span>
-      <div class="flex-1">
-        <h3 class="text-xl font-semibold mb-3">部署 GSI 配置</h3>
-        <pre><code class="hljs language-powershell">uv run dotacoach install-gsi</code></pre>
-        <p class="text-slate-400 text-sm mt-2">脚本会自动找 Steam → Dota 2 安装目录，把配置文件放对地方。如果失败，去 <code>settings.yaml</code> 手动填 <code>dota_path</code>。</p>
-      </div>
-    </div>
-
-    <!-- Step 6 -->
-    <div class="flex gap-4">
-      <span class="step-num">6</span>
-      <div class="flex-1">
-        <h3 class="text-xl font-semibold mb-3">启动！</h3>
-        <pre><code class="hljs language-powershell">uv run dotacoach run</code></pre>
-        <p class="text-slate-400 text-sm mt-2">这是常驻进程，开 Dota 打就能听到中文播报。建议放进任务计划程序设为开机启动。</p>
+        <h3 class="text-xl font-semibold mb-3">启动实时层</h3>
+        <pre><code class="hljs language-powershell">cd $HOME\dota-coach
+uv run dotacoach run</code></pre>
+        <p class="text-slate-400 text-sm mt-2">建议加到任务计划程序里设为开机启动。</p>
       </div>
     </div>
 
@@ -183,7 +161,7 @@ notepad config\settings.yaml</code></pre>
 <section id="install-mac" class="max-w-5xl mx-auto px-6 py-16">
   <div class="flex items-center gap-3 mb-10">
     <span class="text-3xl">🍎</span>
-    <h2 class="text-3xl font-bold">macOS 安装</h2>
+    <h2 class="text-3xl font-bold">macOS 一键安装</h2>
   </div>
 
   <div class="space-y-8">
@@ -191,46 +169,26 @@ notepad config\settings.yaml</code></pre>
     <div class="flex gap-4">
       <span class="step-num">1</span>
       <div class="flex-1">
-        <h3 class="text-xl font-semibold mb-3">装 uv</h3>
-        <pre><code class="hljs language-bash">curl -LsSf https://astral.sh/uv/install.sh | sh</code></pre>
+        <h3 class="text-xl font-semibold mb-3">终端跑这一行</h3>
+        <pre><code class="hljs language-bash">curl -fsSL https://dota.bowie.top/install.sh | bash</code></pre>
+        <p class="text-slate-400 text-sm mt-3">同 Windows 流程，自动装 uv + 依赖 + 交互配置 + GSI。</p>
       </div>
     </div>
 
     <div class="flex gap-4">
       <span class="step-num">2</span>
       <div class="flex-1">
-        <h3 class="text-xl font-semibold mb-3">克隆并装依赖</h3>
-        <pre><code class="hljs language-bash">git clone https://github.com/MajorTomLeee/dota-coach.git ~/dota-coach
-cd ~/dota-coach
-uv venv && uv pip install -e ".[dev]"</code></pre>
+        <h3 class="text-xl font-semibold mb-3">改 Dota 启动选项</h3>
+        <p class="text-slate-400 mb-3">Steam → 库 → Dota 2 → 右键 → <strong>属性</strong> → <strong>启动选项</strong>：</p>
+        <pre><code class="hljs language-bash">-gamestateintegration -condebug</code></pre>
       </div>
     </div>
 
     <div class="flex gap-4">
       <span class="step-num">3</span>
       <div class="flex-1">
-        <h3 class="text-xl font-semibold mb-3">填 settings.yaml</h3>
-        <pre><code class="hljs language-bash">cp config/settings.example.yaml config/settings.yaml
-open -e config/settings.yaml</code></pre>
-        <p class="text-slate-400 text-sm mt-2">同 Windows 步骤 3 的 3 个字段。</p>
-      </div>
-    </div>
-
-    <div class="flex gap-4">
-      <span class="step-num">4</span>
-      <div class="flex-1">
-        <h3 class="text-xl font-semibold mb-3">Dota 启动选项 + 安装 GSI</h3>
-        <p class="text-slate-400 mb-3">Steam → 库 → Dota 2 → 右键 → <strong>属性</strong> → <strong>启动选项</strong>：</p>
-        <pre><code class="hljs language-bash">-gamestateintegration -condebug</code></pre>
-        <pre class="mt-3"><code class="hljs language-bash">uv run dotacoach install-gsi</code></pre>
-      </div>
-    </div>
-
-    <div class="flex gap-4">
-      <span class="step-num">5</span>
-      <div class="flex-1">
         <h3 class="text-xl font-semibold mb-3">启动</h3>
-        <pre><code class="hljs language-bash">uv run dotacoach run</code></pre>
+        <pre><code class="hljs language-bash">cd ~/dota-coach && uv run dotacoach run</code></pre>
       </div>
     </div>
 

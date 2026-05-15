@@ -1,0 +1,56 @@
+rules:
+  - id: no_tp
+    category: economy
+    priority: critical
+    cooldown_s: 60
+    when: "player and player.gold >= 50 and not has_tp and game_time > 360"
+    say: "买 TP"
+
+  - id: minimap_neglect
+    category: map_awareness
+    priority: tactical
+    cooldown_s: 30
+    when: "game_time > 60 and (now - last_minimap_view_ts) > 60"
+    say: "看小地图"
+
+  - id: enemies_missing
+    category: map_awareness
+    priority: tactical
+    cooldown_s: 20
+    when: "missing_enemies_count >= 2"
+    say: "敌方 {missing_enemies_count} 缺，注意"
+
+  - id: power_rune_soon
+    category: tempo
+    priority: tactical
+    cooldown_s: 30
+    when: "next_power_rune_in <= 20 and next_power_rune_in > 0"
+    say: "20 秒神符"
+
+  - id: roshan_window
+    category: tempo
+    priority: tactical
+    cooldown_s: 60
+    when: "roshan_alive and enemies_dead_count >= 2"
+    say: "可以打肉山"
+
+  - id: level_disadvantage
+    category: judgment
+    priority: tactical
+    cooldown_s: 60
+    when: "level_diff <= -2 and game_time > 600"
+    say: "等级落后，回线刷"
+
+  - id: buyback_ready
+    category: economy
+    priority: housekeeping
+    cooldown_s: 300
+    when: "event_just_fired == 'gsi.buyback_ready'"
+    say: "买活好了"
+
+  - id: enemy_ult_soon
+    category: cooldown_tracking
+    priority: tactical
+    cooldown_s: 0
+    when: "enemy_key_ult_remaining is not None and enemy_key_ult_remaining < 15 and enemy_key_ult_remaining > 10"
+    say: "{enemy_hero_zh} 大快好了"

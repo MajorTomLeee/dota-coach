@@ -16,9 +16,23 @@ def weekly(since_days: int):
     click.echo(f"[stub] weekly with since_days={since_days}")
 
 @main.command("install-gsi")
-def install_gsi():
+@click.option("--config", default="config/settings.yaml", type=click.Path())
+def install_gsi(config: str):
     """Install Valve GSI config to the Dota 2 directory."""
-    click.echo("[stub] install-gsi not yet implemented")
+    from pathlib import Path
+    from dotacoach.config import load_settings
+    from dotacoach.paths import find_dota_root
+    from dotacoach.install_gsi import write_gsi_cfg
+
+    settings = load_settings(Path(config))
+    dota_root = (Path(settings.dota_path) if settings.dota_path
+                 else find_dota_root())
+    if dota_root is None:
+        click.echo("ERR: 找不到 Dota 安装目录，请在 settings.yaml 设置 dota_path")
+        raise SystemExit(1)
+    out = write_gsi_cfg(dota_root, port=settings.gsi_port)
+    click.echo(f"GSI cfg written: {out}")
+    click.echo("接下来：把启动选项加上 -gamestateintegration -condebug")
 
 @main.command()
 @click.option("--non-interactive", is_flag=True,

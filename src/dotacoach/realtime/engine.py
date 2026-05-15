@@ -13,17 +13,34 @@ class Announcement:
 
 class RuleEngine:
     """Evaluates rules against a context dict and emits announcements
-    sorted by priority. Per-rule cooldown enforced via monotonic clock."""
+    sorted by priority. Per-rule cooldown enforced via monotonic clock.
+
+    Supports two suppression toggles:
+      - muted: drops everything
+      - in_combat: drops everything except priority="critical"
+    """
 
     def __init__(self, rules: list[Rule]):
         self.rules = rules
         self.last_fired_at: dict[str, float] = {}
+        self._muted = False
+        self._in_combat = False
+
+    def set_muted(self, muted: bool) -> None:
+        self._muted = muted
+
+    def set_in_combat(self, in_combat: bool) -> None:
+        self._in_combat = in_combat
 
     def evaluate(self, ctx: dict) -> list[Announcement]:
+        if self._muted:
+            return []
         now = time.monotonic()
         out: list[Announcement] = []
         for rule in self.rules:
             if not rule.enabled:
+                continue
+            if self._in_combat and rule.priority != "critical":
                 continue
             last = self.last_fired_at.get(rule.id)
             if last is not None and (now - last) < rule.cooldown_s:

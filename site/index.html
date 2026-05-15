@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dota Coach · 你的私人 Dota 2 教练</title>
+<meta name="description" content="GSI + Console log 实时决策播报 + 每周 Claude 复盘报告，合规、本地、跨平台">
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/atom-one-dark.min.css">
+<script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/highlight.min.js"></script>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif; }
+  .step-num {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 2rem; height: 2rem; border-radius: 9999px;
+    background: linear-gradient(135deg, #ef4444, #f97316);
+    color: white; font-weight: 700; flex-shrink: 0;
+  }
+  pre { border-radius: 0.5rem; overflow-x: auto; }
+  pre code.hljs { padding: 1rem 1.25rem; font-size: 0.875rem; line-height: 1.6; }
+  .grad-text {
+    background: linear-gradient(135deg, #ef4444, #f97316, #eab308);
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .card { background: rgba(30,41,59,0.5); backdrop-filter: blur(12px); }
+</style>
+</head>
+<body class="bg-slate-950 text-slate-100">
+
+<!-- Hero -->
+<header class="relative overflow-hidden">
+  <div class="absolute inset-0 bg-gradient-to-br from-red-900/20 via-orange-900/10 to-yellow-900/20"></div>
+  <div class="absolute inset-0" style="background-image: radial-gradient(circle at 20% 30%, rgba(239,68,68,0.15), transparent 50%), radial-gradient(circle at 80% 70%, rgba(234,179,8,0.1), transparent 50%);"></div>
+  <div class="relative max-w-5xl mx-auto px-6 py-20 md:py-32">
+    <div class="inline-block px-3 py-1 rounded-full bg-red-500/10 border border-red-500/30 text-red-300 text-xs mb-6">
+      合规 · 本地运行 · 跨平台
+    </div>
+    <h1 class="text-5xl md:text-7xl font-black tracking-tight mb-6">
+      <span class="grad-text">Dota Coach</span>
+    </h1>
+    <p class="text-xl md:text-2xl text-slate-300 mb-4 font-light">
+      你的私人 Dota 2 教练
+    </p>
+    <p class="text-lg text-slate-400 max-w-2xl leading-relaxed">
+      实时层在游戏中给你中文语音决策提醒（GSI + Console log，全部 Valve 官方接口）；
+      复盘层每周用 Claude 自动挖掘"赢局 vs 输局"的盲区，生成 3 条训练任务。
+    </p>
+    <div class="mt-10 flex flex-wrap gap-3">
+      <a href="#install-windows" class="px-6 py-3 bg-gradient-to-r from-red-500 to-orange-500 text-white font-semibold rounded-lg hover:opacity-90 transition">
+        Windows 安装
+      </a>
+      <a href="#install-mac" class="px-6 py-3 bg-slate-800 text-slate-200 font-semibold rounded-lg hover:bg-slate-700 transition">
+        macOS 安装
+      </a>
+      <a href="https://github.com/MajorTomLeee/dota-coach" target="_blank"
+         class="px-6 py-3 bg-slate-800 text-slate-200 font-semibold rounded-lg hover:bg-slate-700 transition">
+        GitHub →
+      </a>
+    </div>
+  </div>
+</header>
+
+<!-- 它解决什么问题 -->
+<section class="max-w-5xl mx-auto px-6 py-16">
+  <h2 class="text-3xl font-bold mb-10">它解决什么问题</h2>
+  <div class="grid md:grid-cols-3 gap-6">
+    <div class="card p-6 rounded-xl border border-slate-800">
+      <div class="text-3xl mb-3">🎯</div>
+      <h3 class="text-lg font-semibold mb-2 text-orange-300">临场决策提醒</h3>
+      <p class="text-slate-400 text-sm leading-relaxed">没买 TP、敌方大快好了、等级落后该回线——耳机里直接听到，不用低头看 UI。</p>
+    </div>
+    <div class="card p-6 rounded-xl border border-slate-800">
+      <div class="text-3xl mb-3">🔍</div>
+      <h3 class="text-lg font-semibold mb-2 text-orange-300">每周盲区挖掘</h3>
+      <p class="text-slate-400 text-sm leading-relaxed">自动对比你这周赢局和输局的统计差异，Claude 综合出 3 条最值得改的 pattern。</p>
+    </div>
+    <div class="card p-6 rounded-xl border border-slate-800">
+      <div class="text-3xl mb-3">📋</div>
+      <h3 class="text-lg font-semibold mb-2 text-orange-300">训练任务闭环</h3>
+      <p class="text-slate-400 text-sm leading-relaxed">每条 pattern 配 1 条可量化任务，下周报告自动验证：✅ ⚠️ ❌</p>
+    </div>
+  </div>
+</section>
+
+<!-- 合规说明 -->
+<section class="max-w-5xl mx-auto px-6 py-8">
+  <div class="card p-6 rounded-xl border border-emerald-800/50 bg-emerald-900/10">
+    <h3 class="text-lg font-semibold mb-3 text-emerald-300">✓ 完全合规，不会封号</h3>
+    <ul class="text-slate-300 text-sm space-y-2 leading-relaxed">
+      <li>• 仅使用 Valve 官方 GSI（Game State Integration）接口</li>
+      <li>• 仅解析 Valve 自己提供的 <code class="text-orange-300">-condebug</code> console.log</li>
+      <li>• <strong>绝不</strong>读取游戏内存、不获取视野外信息、不自动操作</li>
+      <li>• 全部本地运行，外联仅 OpenDota（公开数据）和 Anthropic（每周一次）</li>
+    </ul>
+  </div>
+</section>
+
+<!-- Windows 安装 -->
+<section id="install-windows" class="max-w-5xl mx-auto px-6 py-16">
+  <div class="flex items-center gap-3 mb-10">
+    <span class="text-3xl">🪟</span>
+    <h2 class="text-3xl font-bold">Windows 安装</h2>
+  </div>
+
+  <div class="space-y-8">
+
+    <!-- Step 1 -->
+    <div class="flex gap-4">
+      <span class="step-num">1</span>
+      <div class="flex-1">
+        <h3 class="text-xl font-semibold mb-3">装 Python 3.11+ 和 uv</h3>
+        <p class="text-slate-400 mb-3">PowerShell 里跑：</p>
+        <pre><code class="hljs language-powershell">winget install Python.Python.3.12
+winget install --id=astral-sh.uv -e</code></pre>
+        <p class="text-slate-500 text-sm mt-2">没装 winget？去微软商店搜 "App Installer"。</p>
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="flex gap-4">
+      <span class="step-num">2</span>
+      <div class="flex-1">
+        <h3 class="text-xl font-semibold mb-3">克隆项目并装依赖</h3>
+        <pre><code class="hljs language-powershell">cd $HOME
+git clone https://github.com/MajorTomLeee/dota-coach.git
+cd dota-coach
+uv venv
+uv pip install -e ".[dev]"</code></pre>
+      </div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="flex gap-4">
+      <span class="step-num">3</span>
+      <div class="flex-1">
+        <h3 class="text-xl font-semibold mb-3">填配置文件</h3>
+        <pre><code class="hljs language-powershell">copy config\settings.example.yaml config\settings.yaml
+notepad config\settings.yaml</code></pre>
+        <p class="text-slate-400 mt-3 mb-2">填入下面 3 个字段：</p>
+        <ul class="text-slate-400 text-sm space-y-1 ml-4">
+          <li>• <code class="text-orange-300">steam_id_32</code>：去 <a href="https://www.opendota.com" class="text-orange-400 hover:underline" target="_blank">opendota.com</a> 搜你的名字，URL 里 <code>/players/12345</code> 那串就是</li>
+          <li>• <code class="text-orange-300">anthropic_api_key</code>：去 <a href="https://console.anthropic.com" class="text-orange-400 hover:underline" target="_blank">console.anthropic.com</a> 拿一个</li>
+          <li>• <code class="text-orange-300">feishu_webhook_url</code>：飞书群里加自定义机器人，复制 webhook URL（可选）</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="flex gap-4">
+      <span class="step-num">4</span>
+      <div class="flex-1">
+        <h3 class="text-xl font-semibold mb-3">改 Dota 启动选项</h3>
+        <p class="text-slate-400 mb-3">Steam → 库 → Dota 2 → 右键 → <strong>属性</strong> → <strong>启动选项</strong>，填入：</p>
+        <pre><code class="hljs language-text">-gamestateintegration -condebug</code></pre>
+      </div>
+    </div>
+
+    <!-- Step 5 -->
+    <div class="flex gap-4">
+      <span class="step-num">5</span>
+      <div class="flex-1">
+        <h3 class="text-xl font-semibold mb-3">部署 GSI 配置</h3>
+        <pre><code class="hljs language-powershell">uv run dotacoach install-gsi</code></pre>
+        <p class="text-slate-400 text-sm mt-2">脚本会自动找 Steam → Dota 2 安装目录，把配置文件放对地方。如果失败，去 <code>settings.yaml</code> 手动填 <code>dota_path</code>。</p>
+      </div>
+    </div>
+
+    <!-- Step 6 -->
+    <div class="flex gap-4">
+      <span class="step-num">6</span>
+      <div class="flex-1">
+        <h3 class="text-xl font-semibold mb-3">启动！</h3>
+        <pre><code class="hljs language-powershell">uv run dotacoach run</code></pre>
+        <p class="text-slate-400 text-sm mt-2">这是常驻进程，开 Dota 打就能听到中文播报。建议放进任务计划程序设为开机启动。</p>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- macOS 安装 -->
+<section id="install-mac" class="max-w-5xl mx-auto px-6 py-16">
+  <div class="flex items-center gap-3 mb-10">
+    <span class="text-3xl">🍎</span>
+    <h2 class="text-3xl font-bold">macOS 安装</h2>
+  </div>
+
+  <div class="space-y-8">
+
+    <div class="flex gap-4">
+      <span class="step-num">1</span>
+      <div class="flex-1">
+        <h3 class="text-xl font-semibold mb-3">装 uv</h3>
+        <pre><code class="hljs language-bash">curl -LsSf https://astral.sh/uv/install.sh | sh</code></pre>
+      </div>
+    </div>
+
+    <div class="flex gap-4">
+      <span class="step-num">2</span>
+      <div class="flex-1">
+        <h3 class="text-xl font-semibold mb-3">克隆并装依赖</h3>
+        <pre><code class="hljs language-bash">git clone https://github.com/MajorTomLeee/dota-coach.git ~/dota-coach
+cd ~/dota-coach
+uv venv && uv pip install -e ".[dev]"</code></pre>
+      </div>
+    </div>
+
+    <div class="flex gap-4">
+      <span class="step-num">3</span>
+      <div class="flex-1">
+        <h3 class="text-xl font-semibold mb-3">填 settings.yaml</h3>
+        <pre><code class="hljs language-bash">cp config/settings.example.yaml config/settings.yaml
+open -e config/settings.yaml</code></pre>
+        <p class="text-slate-400 text-sm mt-2">同 Windows 步骤 3 的 3 个字段。</p>
+      </div>
+    </div>
+
+    <div class="flex gap-4">
+      <span class="step-num">4</span>
+      <div class="flex-1">
+        <h3 class="text-xl font-semibold mb-3">Dota 启动选项 + 安装 GSI</h3>
+        <p class="text-slate-400 mb-3">Steam → 库 → Dota 2 → 右键 → <strong>属性</strong> → <strong>启动选项</strong>：</p>
+        <pre><code class="hljs language-bash">-gamestateintegration -condebug</code></pre>
+        <pre class="mt-3"><code class="hljs language-bash">uv run dotacoach install-gsi</code></pre>
+      </div>
+    </div>
+
+    <div class="flex gap-4">
+      <span class="step-num">5</span>
+      <div class="flex-1">
+        <h3 class="text-xl font-semibold mb-3">启动</h3>
+        <pre><code class="hljs language-bash">uv run dotacoach run</code></pre>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- 使用 -->
+<section class="max-w-5xl mx-auto px-6 py-16 border-t border-slate-800">
+  <h2 class="text-3xl font-bold mb-10">使用</h2>
+
+  <div class="grid md:grid-cols-2 gap-6">
+
+    <div class="card p-6 rounded-xl border border-slate-800">
+      <h3 class="text-xl font-semibold mb-3 text-orange-300">实时层（常驻）</h3>
+      <pre class="mb-3"><code class="hljs language-bash">uv run dotacoach run</code></pre>
+      <p class="text-slate-400 text-sm">开 Dota 自动接管。耳机里听播报。按 <kbd class="px-2 py-0.5 bg-slate-800 rounded text-xs">F8</kbd> 切换全局静音。</p>
+    </div>
+
+    <div class="card p-6 rounded-xl border border-slate-800">
+      <h3 class="text-xl font-semibold mb-3 text-orange-300">手动复盘</h3>
+      <pre class="mb-3"><code class="hljs language-bash">uv run dotacoach weekly</code></pre>
+      <p class="text-slate-400 text-sm">默认拉过去 7 天的对局。报告写到 <code class="text-orange-300">data/reports/</code>，并推送到飞书。</p>
+    </div>
+
+    <div class="card p-6 rounded-xl border border-slate-800 md:col-span-2">
+      <h3 class="text-xl font-semibold mb-3 text-orange-300">自动周报告</h3>
+      <p class="text-slate-400 text-sm mb-3">实时层进程内嵌 APScheduler，每周日凌晨 03:00 自动跑复盘并推送，无需额外配置。</p>
+      <p class="text-slate-400 text-sm">想长时间保持运行：Windows 用任务计划程序，macOS 用 <code>launchctl</code>。</p>
+    </div>
+
+  </div>
+</section>
+
+<!-- FAQ -->
+<section class="max-w-5xl mx-auto px-6 py-16 border-t border-slate-800">
+  <h2 class="text-3xl font-bold mb-10">常见问题</h2>
+
+  <div class="space-y-4">
+
+    <details class="card p-5 rounded-xl border border-slate-800 group">
+      <summary class="font-semibold cursor-pointer flex justify-between items-center">
+        <span>会不会封号？</span>
+        <span class="text-slate-500 group-open:rotate-180 transition">▼</span>
+      </summary>
+      <p class="mt-4 text-slate-400 text-sm leading-relaxed">
+        不会。本工具只用 Valve 官方公开的 GSI 接口和 console.log 输出，不读取游戏内存、不修改游戏文件、不模拟操作。
+        Valve 自己说明 GSI 就是给第三方工具用的。Dota Plus 内置的物品建议、肉山计时器，机制上是一样的。
+      </p>
+    </details>
+
+    <details class="card p-5 rounded-xl border border-slate-800 group">
+      <summary class="font-semibold cursor-pointer flex justify-between items-center">
+        <span>能看到敌方位置/CD 吗？</span>
+        <span class="text-slate-500 group-open:rotate-180 transition">▼</span>
+      </summary>
+      <p class="mt-4 text-slate-400 text-sm leading-relaxed">
+        不能"开图"。敌方信息只有在你视野内才会进 console.log。例如你看到敌方莱恩开了大，工具会从那一刻开始倒计时；你没看到的就算不出来。
+        这是合规边界，也是设计上的选择。
+      </p>
+    </details>
+
+    <details class="card p-5 rounded-xl border border-slate-800 group">
+      <summary class="font-semibold cursor-pointer flex justify-between items-center">
+        <span>每周一次 Claude 调用要花多少钱？</span>
+        <span class="text-slate-500 group-open:rotate-180 transition">▼</span>
+      </summary>
+      <p class="mt-4 text-slate-400 text-sm leading-relaxed">
+        启用了 Prompt Caching，预估月成本 &lt; $1。一次复盘的输入是统计差异 + 几个典型局摘要，输出 JSON 报告，token 量很小。
+      </p>
+    </details>
+
+    <details class="card p-5 rounded-xl border border-slate-800 group">
+      <summary class="font-semibold cursor-pointer flex justify-between items-center">
+        <span>语音太吵怎么办？</span>
+        <span class="text-slate-500 group-open:rotate-180 transition">▼</span>
+      </summary>
+      <p class="mt-4 text-slate-400 text-sm leading-relaxed">
+        默认只启用 ~10 条核心规则，每条都有冷却（默认 30 秒），团战中自动 mute 非关键提醒。还嫌吵就按 <kbd class="px-2 py-0.5 bg-slate-800 rounded text-xs">F8</kbd> 全局 mute，或编辑 <code class="text-orange-300">config/rules.yaml</code> 把不喜欢的规则 <code>enabled: false</code>。
+      </p>
+    </details>
+
+    <details class="card p-5 rounded-xl border border-slate-800 group">
+      <summary class="font-semibold cursor-pointer flex justify-between items-center">
+        <span>没听到播报？</span>
+        <span class="text-slate-500 group-open:rotate-180 transition">▼</span>
+      </summary>
+      <div class="mt-4 text-slate-400 text-sm leading-relaxed space-y-2">
+        <p>排查顺序：</p>
+        <ol class="list-decimal list-inside space-y-1 ml-2">
+          <li>启动选项是不是加了 <code class="text-orange-300">-gamestateintegration -condebug</code>？</li>
+          <li><code>dotacoach run</code> 控制台有没有看到 GSI 推送日志？</li>
+          <li>音频输出设备是不是耳机/扬声器？edge-tts 走系统默认输出</li>
+          <li>试试 <code>uv run python -c "import asyncio; from dotacoach.realtime.voice_backends import make_backend; asyncio.run(make_backend('edge').speak('测试'))"</code></li>
+        </ol>
+      </div>
+    </details>
+
+    <details class="card p-5 rounded-xl border border-slate-800 group">
+      <summary class="font-semibold cursor-pointer flex justify-between items-center">
+        <span>我能改提醒规则吗？</span>
+        <span class="text-slate-500 group-open:rotate-180 transition">▼</span>
+      </summary>
+      <p class="mt-4 text-slate-400 text-sm leading-relaxed">
+        能，全在 <code class="text-orange-300">config/rules.yaml</code>。每条规则有 <code>when</code>（Python 表达式）和 <code>say</code>（播报文本）。改完重启 <code>dotacoach run</code> 即可生效。
+      </p>
+    </details>
+
+  </div>
+</section>
+
+<!-- 架构 -->
+<section class="max-w-5xl mx-auto px-6 py-16 border-t border-slate-800">
+  <h2 class="text-3xl font-bold mb-6">架构一览</h2>
+  <div class="card p-8 rounded-xl border border-slate-800">
+<pre class="text-slate-300 text-sm leading-relaxed overflow-x-auto"><code>打比赛
+  ↓
+GSI + Console log → 规则引擎 → TTS 语音 → 你的决策
+  ↓ (赛后)
+OpenDota API → SQLite
+  ↓ (每周日凌晨)
+模式挖掘（赢局 vs 输局差异）→ Claude API → 周报告
+  ↓
+生成下周训练任务（3 条）
+  ↓
+下周打比赛时实时层会盯着这些任务的指标
+  ↓ (一周后)
+下周报告里验证：上周任务有没有改善？→ 新一轮</code></pre>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer class="max-w-5xl mx-auto px-6 py-12 border-t border-slate-800 text-sm text-slate-500">
+  <div class="flex flex-wrap gap-6 justify-between items-center">
+    <div>
+      <p>Made by <a href="https://bowie.top" class="text-orange-400 hover:underline">Bowie</a></p>
+      <p class="mt-1">完全开源，欢迎 PR</p>
+    </div>
+    <div class="flex gap-4">
+      <a href="https://github.com/MajorTomLeee/dota-coach" class="hover:text-orange-400 transition">GitHub</a>
+      <a href="https://github.com/MajorTomLeee/dota-coach/issues" class="hover:text-orange-400 transition">反馈</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+  hljs.highlightAll();
+</script>
+</body>
+</html>

@@ -49,7 +49,6 @@ jobs:
           retention-days: 30
 
       - name: Deploy to Bowie server
-        if: github.event_name == 'push'
         env:
           DEPLOY_KEY: ${{ secrets.BOWIE_DEPLOY_KEY }}
         shell: bash

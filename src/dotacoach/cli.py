@@ -14,17 +14,25 @@ def run(config: str):
 
     from dotacoach.config import load_settings
     from dotacoach.consolelog.tailer import LogTailer
+    from dotacoach.db.dao import Database
     from dotacoach.events import EventBus
     from dotacoach.gsi.server import serve
     from dotacoach.paths import find_console_log, find_dota_root
     from dotacoach.realtime.hotkey import HotkeyListener
     from dotacoach.realtime.runner import RealtimeRunner
     from dotacoach.realtime.voice_backends import make_backend
+    from dotacoach.tasks.tracker import TaskTracker
 
     settings = load_settings(Path(config))
     bus = EventBus()
     backend = make_backend(settings.voice_engine, voice=settings.voice_name)
-    runner = RealtimeRunner(bus, Path("config/rules.yaml"), backend)
+    db = Database(Path("data/coach.db"))
+    db.init_schema()
+    tracker = TaskTracker(db)
+    runner = RealtimeRunner(
+        bus, Path("config/rules.yaml"), backend,
+        current_tasks=tracker.get_current_tasks(),
+    )
 
     async def boot():
         await runner.start()

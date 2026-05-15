@@ -2,6 +2,7 @@ import logging
 from pathlib import Path
 
 from dotacoach.events import Event, EventBus
+from dotacoach.tasks.linker import boost_rules_for_tasks
 
 from .engine import RuleEngine
 from .game_state import GameStateTracker
@@ -27,10 +28,14 @@ class RealtimeRunner:
         bus: EventBus,
         rules_path: Path,
         tts_backend: TtsBackend,
+        current_tasks: list[dict] | None = None,
     ):
         self.bus = bus
         self.tracker = GameStateTracker()
-        self.engine = RuleEngine(load_rules(rules_path))
+        rules = load_rules(rules_path)
+        if current_tasks:
+            rules = boost_rules_for_tasks(rules, current_tasks)
+        self.engine = RuleEngine(rules)
         self.speaker = Speaker(tts_backend)
 
     async def start(self) -> None:

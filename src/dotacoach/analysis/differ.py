@@ -75,3 +75,18 @@ def compute_differences(wins: list[MatchRecord], losses: list[MatchRecord]
         if d:
             out.append(d)
     return out
+
+
+def hero_pool_stats(matches: list[MatchRecord]) -> list[dict]:
+    by_hero: dict[int, dict] = {}
+    for r in matches:
+        agg = by_hero.setdefault(r.hero_id, {"hero_id": r.hero_id, "games": 0, "wins": 0})
+        agg["games"] += 1
+        if r.win:
+            agg["wins"] += 1
+    out = []
+    for agg in by_hero.values():
+        agg["winrate"] = agg["wins"] / agg["games"]
+        out.append(agg)
+    out.sort(key=lambda x: -x["games"])
+    return out

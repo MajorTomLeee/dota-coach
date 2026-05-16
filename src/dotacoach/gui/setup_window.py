@@ -43,6 +43,7 @@ class Api:
         except ValueError:
             return {"ok": False, "error": "Steam ID 必须是数字"}
         key = (payload.get("anthropic_api_key") or "").strip()
+        base_url = (payload.get("anthropic_base_url") or "").strip() or None
         feishu = (payload.get("feishu_webhook_url") or "").strip() or None
         if not key:
             return {"ok": False, "error": "Anthropic API key 不能为空"}
@@ -52,6 +53,8 @@ class Api:
         text = (
             f"steam_id_32: {steam_id}\n"
             f'anthropic_api_key: "{key}"\n'
+            + (f'anthropic_base_url: "{base_url}"\n' if base_url
+               else "anthropic_base_url: null\n")
             + (f'feishu_webhook_url: "{feishu}"\n' if feishu
                else "feishu_webhook_url: null\n")
             + "dota_path: null\n"

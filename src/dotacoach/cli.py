@@ -98,7 +98,10 @@ async def _run_weekly(settings, since_days: int = 7) -> "Path":
         since_ts=int(time.time()) - since_days * 86400,
     )
     await client.close()
-    anthropic = AsyncAnthropic(api_key=settings.anthropic_api_key)
+    anthropic_kwargs = {"api_key": settings.anthropic_api_key}
+    if settings.anthropic_base_url:
+        anthropic_kwargs["base_url"] = settings.anthropic_base_url
+    anthropic = AsyncAnthropic(**anthropic_kwargs)
     week_label = datetime.now().strftime("%Y-W%V")
     md, _ = await run_weekly_pipeline(
         db=db,
@@ -188,19 +191,25 @@ def init(non_interactive: bool):
     steam_id = _ask("   Steam 32-bit ID", "DOTACOACH_STEAM_ID")
 
     click.echo("\n2) Anthropic API key（每周一次复盘调用，月成本 < $1）")
-    click.echo("   去 https://console.anthropic.com 拿一个")
+    click.echo("   去 https://console.anthropic.com 拿一个；中转站 key 也填这里")
     anthropic_key = _ask("   Anthropic API key", "DOTACOACH_ANTHROPIC_KEY",
                          hide_input=True)
 
-    click.echo("\n3) 飞书 webhook URL（可选，不填就只本地存报告）")
+    click.echo("\n3) API base URL（可选，用中转站时填；留空走官方）")
+    base_url = _ask("   Anthropic base URL（回车跳过）",
+                    "DOTACOACH_ANTHROPIC_BASE_URL", default="")
+
+    click.echo("\n4) 飞书 webhook URL（可选，不填就只本地存报告）")
     feishu = _ask("   飞书 webhook URL（回车跳过）",
                   "DOTACOACH_FEISHU_WEBHOOK", default="")
 
     out.write_text(
         f"steam_id_32: {steam_id}\n"
         f"anthropic_api_key: \"{anthropic_key}\"\n"
-        + (f"feishu_webhook_url: \"{feishu}\"\n" if feishu else
-           "feishu_webhook_url: null\n") +
+        + (f"anthropic_base_url: \"{base_url}\"\n" if base_url else
+           "anthropic_base_url: null\n") +
+        (f"feishu_webhook_url: \"{feishu}\"\n" if feishu else
+         "feishu_webhook_url: null\n") +
         "dota_path: null\n"
         "gsi_port: 4000\n"
         "log_level: \"INFO\"\n"

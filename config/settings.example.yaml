@@ -1,6 +1,7 @@
 # 复制为 settings.yaml 后填入实际值
 steam_id_32: 0           # OpenDota 用的 32位 ID
 anthropic_api_key: "sk-ant-..."
+anthropic_base_url: null # 走官方；中转站填 https://api.xxx.com（兼容 Anthropic 协议）
 feishu_webhook_url: "https://open.feishu.cn/open-apis/bot/v2/hook/xxx"
 dota_path: null          # null 时自动探测
 gsi_port: 4000

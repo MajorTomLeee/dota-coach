@@ -6,6 +6,7 @@ from pydantic import BaseModel, Field
 class Settings(BaseModel):
     steam_id_32: int = Field(..., description="Steam 32-bit account ID")
     anthropic_api_key: str
+    anthropic_base_url: Optional[str] = None
     feishu_webhook_url: Optional[str] = None
     dota_path: Optional[str] = None
     gsi_port: int = 4000

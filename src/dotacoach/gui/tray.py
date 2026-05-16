@@ -5,6 +5,8 @@ import asyncio
 import logging
 import multiprocessing as mp
 import os
+import subprocess
+import sys
 import threading
 from pathlib import Path
 from typing import Optional
@@ -25,16 +27,32 @@ def _settings_path() -> Path:
     return _home() / "config" / "settings.yaml"
 
 
+def _spawn_child(mode: str) -> None:
+    """启动子窗口进程。
+
+    PyInstaller windowed bundle 下不能用 multiprocessing.Process：spawn 会重新
+    执行整个 EXE，而 EXE 入口只跑 tray，于是子进程又开了个 tray。改用 subprocess
+    复用同一个 EXE，通过 --setup / --viewer 参数让入口路由到对应窗口。
+    """
+    env = {**os.environ, "DOTACOACH_HOME": str(_home())}
+    flag = f"--{mode}"
+    if getattr(sys, "frozen", False):
+        # 打包后：sys.executable 是 DotaCoach.exe
+        subprocess.Popen([sys.executable, flag], env=env, close_fds=True)
+    else:
+        # 开发环境：用 python -m dotacoach 启动
+        subprocess.Popen(
+            [sys.executable, "-m", "dotacoach.gui.tray", flag],
+            env=env, close_fds=True,
+        )
+
+
 def _spawn_setup() -> None:
-    from dotacoach.gui import setup_window
-    p = mp.Process(target=setup_window.main, daemon=False)
-    p.start()
+    _spawn_child("setup")
 
 
 def _spawn_viewer() -> None:
-    from dotacoach.gui import report_window
-    p = mp.Process(target=report_window.main, daemon=False)
-    p.start()
+    _spawn_child("viewer")
 
 
 class TrayApp:
@@ -216,6 +234,15 @@ class TrayApp:
 
 def main() -> None:
     mp.freeze_support()  # PyInstaller bundle 安全
+    # 子窗口路由：父进程通过 subprocess 用 --setup / --viewer 调起自己
+    if "--setup" in sys.argv:
+        from dotacoach.gui import setup_window
+        setup_window.main()
+        return
+    if "--viewer" in sys.argv:
+        from dotacoach.gui import report_window
+        report_window.main()
+        return
     logging.basicConfig(level=logging.INFO)
     TrayApp().run()
 

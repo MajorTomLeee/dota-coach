@@ -64,7 +64,13 @@
   <div class="field">
     <label>Anthropic API Key</label>
     <input id="anthropic_key" type="password" placeholder="sk-ant-...">
-    <div class="help">去 <a href="javascript:void(0)" onclick="pywebview.api.open_url('https://console.anthropic.com')">console.anthropic.com</a> 创建，月成本 &lt; $1</div>
+    <div class="help">去 <a href="javascript:void(0)" onclick="pywebview.api.open_url('https://console.anthropic.com')">console.anthropic.com</a> 创建，月成本 &lt; $1；中转站 key 也填这里</div>
+  </div>
+
+  <div class="field">
+    <label>API Base URL（可选，用中转站时填）</label>
+    <input id="anthropic_base_url" type="text" placeholder="留空走官方；中转站如 https://api.xxx.com">
+    <div class="help">兼容 Anthropic 协议的中转站填这里，留空走 api.anthropic.com</div>
   </div>
 
   <div class="field">
@@ -93,6 +99,7 @@ async function save() {
   const status = document.getElementById('status');
   const sid = document.getElementById('steam_id').value.trim();
   const key = document.getElementById('anthropic_key').value.trim();
+  const baseUrl = document.getElementById('anthropic_base_url').value.trim();
   const fei = document.getElementById('feishu').value.trim();
   if (!sid || !key) {
     status.textContent = "Steam ID 和 Anthropic API Key 必填";
@@ -103,7 +110,10 @@ async function save() {
   status.className = "status";
   try {
     const r = await pywebview.api.save_settings({
-      steam_id_32: sid, anthropic_api_key: key, feishu_webhook_url: fei
+      steam_id_32: sid,
+      anthropic_api_key: key,
+      anthropic_base_url: baseUrl,
+      feishu_webhook_url: fei,
     });
     if (r.ok) {
       status.textContent = "已保存到 " + r.path;
@@ -130,6 +140,7 @@ window.addEventListener('pywebviewready', async () => {
     if (cur) {
       if (cur.steam_id_32) document.getElementById('steam_id').value = cur.steam_id_32;
       if (cur.anthropic_api_key) document.getElementById('anthropic_key').value = cur.anthropic_api_key;
+      if (cur.anthropic_base_url) document.getElementById('anthropic_base_url').value = cur.anthropic_base_url;
       if (cur.feishu_webhook_url) document.getElementById('feishu').value = cur.feishu_webhook_url;
     }
   } catch (e) { /* no current settings */ }
